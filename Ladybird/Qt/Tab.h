@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "LibWebView/InspectorClient.h"
 #include "LocationEdit.h"
 #include "WebContentView.h"
 #include <Ladybird/Qt/FindInPageWidget.h>
@@ -51,7 +52,7 @@ public:
         Document,
         HoveredElement
     };
-    void show_inspector_window(InspectorTarget = InspectorTarget::Document);
+    void show_inspector(InspectorTarget = InspectorTarget::Document);
     void show_inspector_pane();
 
     void show_find_in_page();
@@ -88,6 +89,7 @@ public:
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
+    void inspector_position_selected(WebView::InspectorClient::Position position);
 
 signals:
     void title_changed(int id, QString const&);

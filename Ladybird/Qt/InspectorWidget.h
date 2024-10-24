@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "LibWebView/InspectorClient.h"
 #include "WebContentView.h"
 #include <LibGfx/Point.h>
 #include <LibWebView/Forward.h>
@@ -31,10 +32,13 @@ public:
     void select_hovered_node();
     void select_default_node();
 
-    void setWindowFlag(Qt::WindowType flag, bool on = true);
+    void set_position(WebView::InspectorClient::Position position);
 
 public slots:
     void device_pixel_ratio_changed(qreal dpi);
+
+signals:
+    void select_inspector_position(WebView::InspectorClient::Position position);
 
 private:
     virtual bool event(QEvent*) override;

@@ -384,6 +384,7 @@ public:
     virtual void inspector_did_execute_console_script([[maybe_unused]] String const& script) { }
     virtual void inspector_did_export_inspector_html([[maybe_unused]] String const& html) { }
     virtual void inspector_did_close() { }
+    virtual void inspector_did_select_position([[maybe_unused]] String const& position) { }
 
     virtual bool is_ready_to_paint() const = 0;
 

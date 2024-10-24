@@ -21,4 +21,6 @@
     undefined exportInspectorHTML(DOMString html);
 
     undefined closeInspector();
+
+    undefined selectInspectorPosition(DOMString position);
 };

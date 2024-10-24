@@ -7,6 +7,7 @@
  */
 
 #include "Settings.h"
+#include "LibWebView/InspectorClient.h"
 #include "StringUtils.h"
 #include <AK/LexicalPath.h>
 #include <Ladybird/DefaultSettings.h>
@@ -162,6 +163,20 @@ void Settings::set_show_menubar(bool show_menubar)
 {
     m_qsettings->setValue("show_menubar", show_menubar);
     emit show_menubar_changed(show_menubar);
+}
+
+WebView::InspectorClient::Position Settings::inspector_position()
+{
+    auto const qstring_position = m_qsettings->value("inspector_position", "RIGHT").toString();
+    auto const string_position = ak_string_from_qstring(qstring_position);
+    return WebView::InspectorClient::string_to_position(string_position);
+}
+
+void Settings::set_inspector_position(WebView::InspectorClient::Position position)
+{
+    auto string_position = WebView::InspectorClient::position_to_string(position);
+    auto qstring_position = qstring_from_ak_string(string_position);
+    m_qsettings->setValue("inspector_position", qstring_position);
 }
 
 }

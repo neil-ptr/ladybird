@@ -875,36 +875,68 @@ void Tab::recreate_toolbar_icons()
     m_hamburger_button->setIcon(create_tvg_icon_with_theme_colors("hamburger", palette()));
 }
 
-void Tab::show_inspector_window(InspectorTarget inspector_target)
+void Tab::show_inspector(InspectorTarget inspector_target)
 {
-    if (!m_inspector_widget)
-        m_inspector_widget = new InspectorWidget(this, view(), Qt::Window);
-    else {
+    auto position = Settings::the()->inspector_position();
+
+    if (!m_inspector_widget) {
+        m_inspector_widget = new InspectorWidget(this, view(), Qt::Widget);
+        connect(m_inspector_widget, &InspectorWidget::select_inspector_position,
+            this, &Tab::inspector_position_selected);
+    }
+
+    m_inspector_widget->set_position(position);
+
+    if (position == WebView::InspectorClient::Position::Right) {
+        m_splitter->setOrientation(Qt::Horizontal);
+        m_splitter->addWidget(m_inspector_widget);
+        m_splitter->setSizes({ 200, 100 });
+    } else if (position == WebView::InspectorClient::Position::Left) {
+        m_splitter->setOrientation(Qt::Horizontal);
+        m_splitter->insertWidget(0, m_inspector_widget);
+        m_splitter->setSizes({ 100, 200 });
+    } else if (position == WebView::InspectorClient::Position::Bottom) {
+        m_splitter->setOrientation(Qt::Vertical);
+        m_splitter->addWidget(m_inspector_widget);
+        m_splitter->setSizes({ 200, 100 });
+    } else if (position == WebView::InspectorClient::Position::Window) {
         m_inspector_widget->setParent(nullptr);
-        m_inspector_widget->setWindowFlag(Qt::Window);
+        m_inspector_widget->resize(875, 825);
+        m_inspector_widget->activateWindow();
+        m_inspector_widget->raise();
     }
 
     m_inspector_widget->show();
-    m_inspector_widget->resize(875, 825);
-    m_inspector_widget->activateWindow();
-    m_inspector_widget->raise();
 
     if (inspector_target == InspectorTarget::HoveredElement)
         m_inspector_widget->select_hovered_node();
 }
 
-void Tab::show_inspector_pane()
+void Tab::inspector_position_selected(WebView::InspectorClient::Position position)
 {
-    if (!m_inspector_widget)
-        m_inspector_widget = new InspectorWidget(this, view(), Qt::Widget);
-    else
-        m_inspector_widget->setWindowFlag(Qt::Widget);
-
-    m_splitter->addWidget(m_inspector_widget);
-
-    m_splitter->setSizes({ 200, 100 });
+    m_inspector_widget->set_position(position);
+    if (position == WebView::InspectorClient::Position::Right) {
+        m_splitter->setOrientation(Qt::Horizontal);
+        m_splitter->addWidget(m_inspector_widget);
+        m_splitter->setSizes({ 200, 100 });
+    } else if (position == WebView::InspectorClient::Position::Left) {
+        m_splitter->setOrientation(Qt::Horizontal);
+        m_splitter->insertWidget(0, m_inspector_widget);
+        m_splitter->setSizes({ 100, 200 });
+    } else if (position == WebView::InspectorClient::Position::Bottom) {
+        m_splitter->setOrientation(Qt::Vertical);
+        m_splitter->addWidget(m_inspector_widget);
+        m_splitter->setSizes({ 200, 100 });
+    } else if (position == WebView::InspectorClient::Position::Window) {
+        m_inspector_widget->setParent(nullptr);
+        m_inspector_widget->resize(875, 825);
+        m_inspector_widget->activateWindow();
+        m_inspector_widget->raise();
+    }
 
     m_inspector_widget->show();
+
+    Settings::the()->set_inspector_position(position);
 }
 
 void Tab::show_find_in_page()

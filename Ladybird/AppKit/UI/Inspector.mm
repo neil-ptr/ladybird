@@ -47,7 +47,7 @@ static constexpr NSInteger CONTEXT_MENU_DELETE_COOKIE_TAG = 4;
 @synthesize cookie_context_menu = _cookie_context_menu;
 
 - (instancetype)init:(Tab*)tab
-          isWindowed:(BOOL)is_windowed
+            position:(WebView::InspectorClient::Position)position
 {
     self = [super init];
 
@@ -63,7 +63,7 @@ static constexpr NSInteger CONTEXT_MENU_DELETE_COOKIE_TAG = 4;
         [self setContentView:self.web_view];
         [self setDocumentView:[[NSView alloc] init]];
 
-        m_inspector_client = make<WebView::InspectorClient>([[tab web_view] view], [[self web_view] view], is_windowed);
+        m_inspector_client = make<WebView::InspectorClient>([[tab web_view] view], [[self web_view] view], position);
         __weak Inspector* weak_self = self;
 
         m_inspector_client->on_requested_dom_node_text_context_menu = [weak_self](auto position) {
@@ -141,6 +141,16 @@ static constexpr NSInteger CONTEXT_MENU_DELETE_COOKIE_TAG = 4;
 
             [strong_self removeFromSuperview];
         };
+
+        m_inspector_client->on_selected_position = [weak_self](String const& position) {
+            Inspector* strong_self = weak_self;
+            if (strong_self == nil) {
+                return;
+            }
+
+            auto const pos = WebView::InspectorClient::string_to_position(position);
+            [strong_self.tab inspectorPositionSelected:pos];
+        };
     }
 
     return self;
@@ -163,9 +173,9 @@ static constexpr NSInteger CONTEXT_MENU_DELETE_COOKIE_TAG = 4;
     m_inspector_client->select_hovered_node();
 }
 
-- (void)setIsWindowed:(BOOL)is_visible
+- (void)setPosition:(WebView::InspectorClient::Position)position
 {
-    m_inspector_client->set_is_windowed(is_visible);
+    m_inspector_client->set_position(position);
 }
 
 #pragma mark - Private methods

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Assertions.h"
+#include "Application/Settings.h"
 #include <AK/ByteString.h>
 #include <AK/String.h>
 #include <Ladybird/Utilities.h>
@@ -174,43 +176,103 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)openInspector:(id)sender
 {
-    if (self.inspector_controller != nil) {
-        [self.inspector_controller.window makeKeyAndOrderFront:sender];
-        return;
-    }
+    auto position = [[Settings the] inspectorPosition];
+    [self.inspector setPosition:position];
 
     if (self.inspector == nil)
-        self.inspector = [[Inspector alloc] init:self isWindowed:true];
-    else
-        [self.inspector setIsWindowed:true];
+        self.inspector = [[Inspector alloc] init:self position:position];
 
-    self.inspector_controller = [[InspectorController alloc] init:self];
-    [self.inspector_controller showWindow:nil];
+    switch (position) {
+    case WebView::InspectorClient::Position::Right: {
+        [self.split_view setVertical:YES];
+        [self.split_view addArrangedSubview:self.inspector];
+        [self.split_view layoutSubtreeIfNeeded];
+        CGFloat web_view_width = 0.66 * self.frame.size.width;
+        [self.split_view setPosition:web_view_width ofDividerAtIndex:0];
+        break;
+    }
+    case WebView::InspectorClient::Position::Bottom: {
+        [self.split_view setVertical:NO];
+        [self.split_view addArrangedSubview:self.inspector];
+        [self.split_view layoutSubtreeIfNeeded];
+        CGFloat web_view_height = 0.66 * self.frame.size.height;
+        [self.split_view setPosition:web_view_height ofDividerAtIndex:0];
+        break;
+    }
+    case WebView::InspectorClient::Position::Left: {
+        [self.split_view setVertical:YES];
+        [self.split_view insertArrangedSubview:self.inspector atIndex:0];
+        [self.split_view layoutSubtreeIfNeeded];
+        CGFloat web_view_width = 0.33 * self.frame.size.width;
+        [self.split_view setPosition:web_view_width ofDividerAtIndex:0];
+        break;
+    }
+    case WebView::InspectorClient::Position::Window: {
+        if (self.inspector_controller == nil) {
+            self.inspector_controller = [[InspectorController alloc] init:self];
+        }
+        [self.inspector_controller showWindow:nil];
+        [self.inspector_controller.window makeKeyAndOrderFront:sender];
+        [self.split_view layoutSubtreeIfNeeded];
+        break;
+    }
+    default: {
+        VERIFY_NOT_REACHED();
+    }
+    }
 
-    [self.split_view layoutSubtreeIfNeeded];
     [self.web_view handleResize];
+    [self.inspector.web_view handleResize];
 }
 
-- (void)openInspectorPane:(id)sender
+- (void)inspectorPositionSelected:(WebView::InspectorClient::Position)position
 {
-    if (self.inspector_controller != nil) {
+    [[Settings the] setInspectorPosition:position];
+
+    if (position != WebView::InspectorClient::Position::Window && self.inspector_controller != nil) {
         [self.inspector_controller close];
         self.inspector_controller = nil;
     }
 
-    if (self.inspector == nil)
-        self.inspector = [[Inspector alloc] init:self isWindowed:false];
-    else
-        [self.inspector setIsWindowed:false];
+    [self.inspector setPosition:position];
+    switch (position) {
+    case WebView::InspectorClient::Position::Right: {
+        [self.split_view setVertical:YES];
+        [self.split_view addArrangedSubview:self.inspector];
+        [self.split_view layoutSubtreeIfNeeded];
+        CGFloat web_view_width = 0.66 * self.frame.size.width;
+        [self.split_view setPosition:web_view_width ofDividerAtIndex:0];
+        break;
+    }
+    case WebView::InspectorClient::Position::Bottom: {
+        [self.split_view setVertical:NO];
+        [self.split_view addArrangedSubview:self.inspector];
+        [self.split_view layoutSubtreeIfNeeded];
+        CGFloat web_view_height = 0.66 * self.frame.size.height;
+        [self.split_view setPosition:web_view_height ofDividerAtIndex:0];
+        break;
+    }
+    case WebView::InspectorClient::Position::Left: {
+        [self.split_view setVertical:YES];
+        [self.split_view insertArrangedSubview:self.inspector atIndex:0];
+        [self.split_view layoutSubtreeIfNeeded];
+        CGFloat inspector_width = 0.33 * self.frame.size.width;
+        [self.split_view setPosition:inspector_width ofDividerAtIndex:0];
+        break;
+    }
+    case WebView::InspectorClient::Position::Window: {
+        self.inspector_controller = [[InspectorController alloc] init:self];
+        [self.inspector_controller showWindow:nil];
+        [self.split_view layoutSubtreeIfNeeded];
+        break;
+    }
+    default: {
+        VERIFY_NOT_REACHED();
+    }
+    }
 
-    [self.split_view addSubview:self.inspector];
-    [self.split_view layoutSubtreeIfNeeded];
-
-    CGFloat web_view_width = 0.66 * self.frame.size.width;
-    [self.split_view setPosition:web_view_width ofDividerAtIndex:0];
-
-    [[self.inspector web_view] handleResize];
     [self.web_view handleResize];
+    [self.inspector.web_view handleResize];
 }
 
 - (void)onInspectorClosed

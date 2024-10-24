@@ -3,6 +3,7 @@ add_library(ladybird_impl STATIC
     Application/Application.mm
     Application/ApplicationDelegate.mm
     Application/EventLoopImplementation.mm
+    Application/Settings.mm
     UI/Event.mm
     UI/Inspector.mm
     UI/InspectorController.mm

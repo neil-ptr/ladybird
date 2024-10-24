@@ -5,6 +5,7 @@
  */
 
 #include "InspectorWidget.h"
+#include "Ladybird/Qt/Settings.h"
 #include <Ladybird/Qt/StringUtils.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWebView/Attribute.h>
@@ -28,8 +29,8 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view, Qt:
     if (is_using_dark_system_theme(*this))
         m_inspector_view->update_palette(WebContentView::PaletteMode::Dark);
 
-    auto is_windowed = window_type == Qt::Window;
-    m_inspector_client = make<WebView::InspectorClient>(content_view, *m_inspector_view, is_windowed);
+    auto position = Settings::the()->inspector_position();
+    m_inspector_client = make<WebView::InspectorClient>(content_view, *m_inspector_view, position);
 
     m_edit_node_action = new QAction("&Edit node", this);
     connect(m_edit_node_action, &QAction::triggered, [this]() { m_inspector_client->context_menu_edit_dom_node(); });
@@ -141,11 +142,14 @@ InspectorWidget::InspectorWidget(QWidget* tab, WebContentView& content_view, Qt:
         close();
     };
 
+    m_inspector_client->on_selected_position = [this](String const& position) {
+        this->select_inspector_position(WebView::InspectorClient::string_to_position(position));
+    };
+
     setLayout(new QVBoxLayout);
     layout()->addWidget(m_inspector_view);
 
-    if (is_windowed)
-        setWindowTitle("Inspector");
+    setWindowTitle("Inspector");
 
     // Listen for DPI changes
     m_device_pixel_ratio = devicePixelRatio();
@@ -188,12 +192,16 @@ void InspectorWidget::select_default_node()
     m_inspector_client->select_default_node();
 }
 
-void InspectorWidget::setWindowFlag(Qt::WindowType flag, bool on)
+void InspectorWidget::set_position(WebView::InspectorClient::Position position)
 {
-    QWidget::setWindowFlag(flag, on);
+    auto flag = Qt::Widget;
+    if (position == WebView::InspectorClient::Position::Window) {
+        flag = Qt::Window;
+    }
 
-    auto is_windowed = flag == Qt::Window;
-    m_inspector_client->set_is_windowed(is_windowed);
+    QWidget::setWindowFlag(flag, true);
+
+    m_inspector_client->set_position(position);
 }
 
 void InspectorWidget::device_pixel_ratio_changed(qreal dpi)

@@ -702,6 +702,14 @@ void WebContentClient::inspector_did_close(u64 page_id)
     }
 }
 
+void WebContentClient::inspector_did_select_position(u64 page_id, String const& position)
+{
+    if (auto view = view_for_page_id(page_id); view.has_value()) {
+        if (view->on_inspector_selected_position)
+            view->on_inspector_selected_position(position);
+    }
+}
+
 Messages::WebContentClient::RequestWorkerAgentResponse WebContentClient::request_worker_agent(u64 page_id)
 {
     if (auto view = view_for_page_id(page_id); view.has_value()) {

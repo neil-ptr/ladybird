@@ -114,5 +114,6 @@ endpoint WebContentClient
     inspector_did_execute_console_script(u64 page_id, String script) =|
     inspector_did_export_inspector_html(u64 page_id, String html) =|
     inspector_did_close(u64 page_id) =|
+    inspector_did_select_position(u64 page_id, String position) =|
 
 }

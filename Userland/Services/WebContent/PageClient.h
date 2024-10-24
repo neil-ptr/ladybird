@@ -174,6 +174,7 @@ private:
     virtual void inspector_did_execute_console_script(String const& script) override;
     virtual void inspector_did_export_inspector_html(String const& script) override;
     virtual void inspector_did_close() override;
+    virtual void inspector_did_select_position(String const& position) override;
 
     Web::Layout::Viewport* layout_root();
     void setup_palette();

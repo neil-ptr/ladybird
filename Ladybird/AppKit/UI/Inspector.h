@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "LibWebView/InspectorClient.h"
 #import <Cocoa/Cocoa.h>
 
 @class LadybirdWebView;
@@ -14,14 +15,14 @@
 @interface Inspector : NSScrollView
 
 - (instancetype)init:(Tab*)tab
-          isWindowed:(BOOL)is_windowed;
+            position:(WebView::InspectorClient::Position)position;
 
 - (void)inspect;
 - (void)reset;
 
 - (void)selectHoveredElement;
 
-- (void)setIsWindowed:(BOOL)is_windowed;
+- (void)setPosition:(WebView::InspectorClient::Position)position;
 
 @property (nonatomic, strong) NSScrollView* inspector_scroll_view;
 @property (nonatomic, strong) LadybirdWebView* web_view;

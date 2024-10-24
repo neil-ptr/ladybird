@@ -359,16 +359,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, IsPopupWindow
     inspect_menu->addAction(inspector_action);
     QObject::connect(inspector_action, &QAction::triggered, this, [this] {
         if (m_current_tab) {
-            m_current_tab->show_inspector_window();
-        }
-    });
-
-    auto* inspector_pane_action = new QAction("Open Inspector Pane", this);
-    inspector_pane_action->setIcon(load_icon_from_uri("resource://icons/browser/dom-tree.png"sv));
-    inspect_menu->addAction(inspector_pane_action);
-    QObject::connect(inspector_pane_action, &QAction::triggered, this, [this] {
-        if (m_current_tab) {
-            m_current_tab->show_inspector_pane();
+            m_current_tab->show_inspector();
         }
     });
 
@@ -639,7 +630,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, IsPopupWindow
     m_inspect_dom_node_action = new QAction("&Inspect Element", this);
     connect(m_inspect_dom_node_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
-            m_current_tab->show_inspector_window(Tab::InspectorTarget::HoveredElement);
+            m_current_tab->show_inspector(Tab::InspectorTarget::HoveredElement);
     });
     m_go_back_action = new QAction("Go Back", this);
     connect(m_go_back_action, &QAction::triggered, this, [this] {

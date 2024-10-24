@@ -116,6 +116,41 @@ inspector.setCloseInspectorButtonVisibility = isVisible => {
     closeInspectorButton.style.display = display;
 };
 
+inspector.selectPosition = event => {
+    const position = event.target.value;
+    if (
+        position !== "RIGHT" &&
+        position !== "LEFT" &&
+        position !== "BOTTOM" &&
+        position !== "WINDOW"
+    ) {
+        console.error("Invalid value for inspector position");
+        return;
+    }
+
+    inspector.selectInspectorPosition(position);
+};
+
+inspector.setSelectedPosition = position => {
+    if (
+        position !== "RIGHT" &&
+        position !== "LEFT" &&
+        position !== "BOTTOM" &&
+        position !== "WINDOW"
+    ) {
+        console.error("Invalid value for inspector position");
+        return;
+    }
+
+    const selectPositionElement = document.getElementById("select-inspector-position");
+    if (!selectPositionElement) {
+        console.error("Could not find select-inspector-position select element");
+        return;
+    }
+
+    selectPositionElement.value = position;
+};
+
 inspector.reset = () => {
     let domTree = document.getElementById("dom-tree");
     domTree.innerHTML = "";

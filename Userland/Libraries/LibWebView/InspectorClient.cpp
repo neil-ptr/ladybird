@@ -44,10 +44,10 @@ static String style_sheet_identifier_to_json(Web::CSS::StyleSheetIdentifier cons
         identifier.url.value_or("undefined"_string)));
 }
 
-InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImplementation& inspector_web_view, bool is_windowed)
+InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImplementation& inspector_web_view, InspectorClient::Position position)
     : m_content_web_view(content_web_view)
     , m_inspector_web_view(inspector_web_view)
-    , m_is_windowed(is_windowed)
+    , m_position(position)
 {
     m_content_web_view.on_received_dom_tree = [this](auto const& dom_tree) {
         auto result = parse_json_tree(dom_tree);
@@ -285,6 +285,10 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
         this->on_requested_close();
     };
 
+    m_inspector_web_view.on_inspector_selected_position = [this](String const& position) {
+        this->on_selected_position(position);
+    };
+
     load_inspector();
 }
 
@@ -509,13 +513,20 @@ void InspectorClient::context_menu_delete_all_cookies()
     m_cookie_context_menu_index.clear();
 }
 
-void InspectorClient::set_is_windowed(bool is_windowed)
+void InspectorClient::set_position(InspectorClient::Position position)
 {
     if (!m_inspector_loaded)
         return;
 
-    auto const script = MUST(String::formatted("inspector.setCloseInspectorButtonVisibility({});", !is_windowed));
-    m_inspector_web_view.run_javascript(script);
+    m_position = position;
+
+    auto const is_windowed = position == InspectorClient::Position::Window;
+    auto const close_button_script = MUST(String::formatted("inspector.setCloseInspectorButtonVisibility({});", !is_windowed));
+    m_inspector_web_view.run_javascript(close_button_script);
+
+    auto const position_str = position_to_string(position);
+    auto const select_position_script = MUST(String::formatted("inspector.setSelectedPosition(\"{}\");", position_str.to_uppercase_string()));
+    m_inspector_web_view.run_javascript(select_position_script);
 }
 
 void InspectorClient::load_inspector()
@@ -551,7 +562,7 @@ void InspectorClient::load_inspector()
     generator.set("CUSTOM_PROPERTIES"sv, generate_property_table("custom-properties"sv));
 
     auto display = "block";
-    if (m_is_windowed) {
+    if (m_position == Position::Window) {
         display = "none";
     }
 
@@ -561,6 +572,22 @@ void InspectorClient::load_inspector()
         display));
 
     generator.set("CLOSE_INSPECTOR_BUTTON"sv, button_element);
+
+    auto const right = m_position == InspectorClient::Position::Right ? "selected" : "";
+    auto const bottom = m_position == InspectorClient::Position::Bottom ? "selected" : "";
+    auto const left = m_position == InspectorClient::Position::Left ? "selected" : "";
+    auto const window = m_position == InspectorClient::Position::Window ? "selected" : "";
+    auto select_inspector_position_element = MUST(String::formatted(R"~~~(
+        <select id="select-inspector-position" onchange="inspector.selectPosition(event)">
+            <option value="RIGHT" {}>Right</option>
+            <option value="BOTTOM" {}>Bottom</option>
+            <option value="LEFT" {}>Left</option>
+            <option value="WINDOW" {}>Window</option>
+        </select>
+)~~~",
+        right, bottom, left, window));
+
+    generator.set("SELECT_INSPECTOR_POSITION"sv, select_inspector_position_element);
 
     generator.append(inspector_html->data());
 
@@ -840,6 +867,40 @@ void InspectorClient::end_console_group()
 {
     static constexpr auto script = "inspector.endConsoleGroup();"sv;
     m_inspector_web_view.run_javascript(script);
+}
+
+StringView InspectorClient::position_to_string(InspectorClient::Position position)
+{
+    switch (position) {
+    case InspectorClient::Position::Left:
+        return "LEFT"sv;
+    case InspectorClient::Position::Bottom:
+        return "BOTTOM"sv;
+    case InspectorClient::Position::Right:
+        return "RIGHT"sv;
+    case InspectorClient::Position::Window:
+        return "WINDOW"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+InspectorClient::Position InspectorClient::string_to_position(String const& position)
+{
+    if (position == "LEFT") {
+        return InspectorClient::Position::Left;
+    }
+    if (position == "BOTTOM") {
+        return InspectorClient::Position::Bottom;
+    }
+    if (position == "RIGHT") {
+        return InspectorClient::Position::Right;
+    }
+    if (position == "WINDOW") {
+        return InspectorClient::Position::Window;
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 }

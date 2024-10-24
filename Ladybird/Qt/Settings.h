@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "LibWebView/InspectorClient.h"
 #include <AK/ByteString.h>
 #include <AK/OwnPtr.h>
 #include <LibWebView/SearchEngine.h>
@@ -72,6 +73,9 @@ public:
 
     bool show_menubar();
     void set_show_menubar(bool show_menubar);
+
+    WebView::InspectorClient::Position inspector_position();
+    void set_inspector_position(WebView::InspectorClient::Position position);
 
 signals:
     void show_menubar_changed(bool show_menubar);

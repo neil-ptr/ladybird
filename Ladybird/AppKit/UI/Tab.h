@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "LibWebView/InspectorClient.h"
 #include <AK/Types.h>
 
 #import <Cocoa/Cocoa.h>
@@ -24,6 +25,7 @@
 
 - (void)openInspector:(id)sender;
 - (void)onInspectorClosed;
+- (void)inspectorPositionSelected:(WebView::InspectorClient::Position)position;
 
 @property (nonatomic, strong) LadybirdWebView* web_view;
 

@@ -39,6 +39,8 @@ public:
 
     void close_inspector();
 
+    void select_inspector_position(String const& position);
+
 private:
     explicit Inspector(JS::Realm&);
 

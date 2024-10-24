@@ -110,4 +110,9 @@ void Inspector::close_inspector()
     inspector_page_client().inspector_did_close();
 }
 
+void Inspector::select_inspector_position(String const& position)
+{
+    inspector_page_client().inspector_did_select_position(position);
+}
+
 }

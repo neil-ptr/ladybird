@@ -682,6 +682,11 @@ void PageClient::inspector_did_close()
     client().async_inspector_did_close(m_id);
 }
 
+void PageClient::inspector_did_select_position(String const& position)
+{
+    client().async_inspector_did_select_position(m_id, position);
+}
+
 ErrorOr<void> PageClient::connect_to_webdriver(ByteString const& webdriver_ipc_path)
 {
     VERIFY(!m_webdriver);
